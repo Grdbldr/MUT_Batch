@@ -5,11 +5,11 @@ module version
 	!This file is generated automatically by running version_header
 	
 	! Local code information:
-	character(80) :: local_name = '@@   HSBATCH: Batch processor for HydroGeoSphere                        @@'
+	character(80) :: local_name = '@@     MUT_batch: Batch processor for MUT, USGS_1 and Tecplot           @@'
 	character(80) :: local_version = '1385'
-	character(80) :: build_date	   = '20121016'
+	character(80) :: build_date	   = '2025'
 	character(80) :: build_specific_info   = '64bit'
-	character(80) :: HGSDir	   = 'D:\hgs\trunk\'
+	character(80) :: MUTDir	   = 'C:\MUT\MUT_Examples-main\_MUT_USERBIN'
 	
 	! Repository information:
 	character(80) :: repo_1= 'Path: .'

@@ -1,6 +1,6 @@
 !----------------------------------------------------------------------
-program hsbatch_processor
-	use hsbat_data
+program MUTbatch_processor
+	use MUTbat_data
 	use user_commands
 	use dfport
 	implicit none
@@ -28,9 +28,9 @@ program hsbatch_processor
 	ieco=0
     call header(ieco)
 
-	! Open a file containing pathnames to hydrosphere data sets
+	! Open a file containing pathnames to MUT data sets
 	itmp=55
-    call enter_prefix(prefix,l_prfx,itmp,'.hsbatch')
+    call enter_prefix(prefix,l_prfx,itmp,'.MUTbatch')
 
     ibat=56
 	open(ibat,file='scratch_batch',status='unknown')
@@ -48,7 +48,7 @@ program hsbatch_processor
     call header(ieco)
 
 	len=len_trim(startdir)
-    write(ieco,*) 'Input file : ',startdir(:len)//'\'//prefix(:l_prfx)//'.hsbatch'
+    write(ieco,*) 'Input file : ',startdir(:len)//'\'//prefix(:l_prfx)//'.MUTbatch'
     write(ieco,*) 'Echo file  : ',startdir(:len)//'\'//prefix(:l_prfx)//'o.bat_eco'
 
 	status = getcwd (workdir)
@@ -80,37 +80,56 @@ program hsbatch_processor
             skipping=.true.
 
         else if(instruction .eq. pause_file) then
-            pause 'HSBATCH processor paused, press any key to continue'
+            pause 'MUTBatch processor paused, press any key to continue'
 
         else if(instruction .eq. do_runtime_history_cmd) then
             do_runtime_history=.true.
+        
+        else if(instruction .eq. mut_debug_cmd) then
+            mut_debug=.true.
             
-        elseif(instruction .eq. grok_path_cmd) then
-			read(ibat,'(a)',iostat=status) grok_path
-			len=len_trim(grok_path)
-			inquire(file=grok_path(:len)//'grok.exe',exist=file_exists)
-			if(.not. file_exists) then
-				call input_error(' File not found: '//grok_path(:len)//'grok.exe')
-			endif
-			write(ieco,'(a)') grok_path(:len)//'grok.exe'
+        elseif(instruction .eq. MUT_path_cmd) then
+			read(ibat,'(a)',iostat=status) MUT_path
+			len=len_trim(MUT_path)
+            if(mut_debug) then
+			    inquire(file=MUT_path(:len)//'mut_debug.exe',exist=file_exists)
+			    if(.not. file_exists) then
+				    call input_error(' File not found: '//MUT_path(:len)//'mut_debug.exe')
+			    endif
+			    write(ieco,'(a)') MUT_path(:len)//'mut_debug.exe'
+            else
+			    inquire(file=MUT_path(:len)//'mut.exe',exist=file_exists)
+			    if(.not. file_exists) then
+				    call input_error(' File not found: '//MUT_path(:len)//'mut.exe')
+			    endif
+			    write(ieco,'(a)') MUT_path(:len)//'mut.exe'
+            endif
 
-        elseif(instruction .eq. hs_path_cmd) then
-			read(ibat,'(a)',iostat=status) hs_path
-			len=len_trim(hs_path)
-			inquire(file=hs_path(:len)//'phgs.exe',exist=file_exists)
+        elseif(instruction .eq. modflow_path_cmd) then
+			read(ibat,'(a)',iostat=status) modflow_path
+			len=len_trim(modflow_path)
+			inquire(file=modflow_path(:len)//'usgs_1.exe',exist=file_exists)
 			if(.not. file_exists) then
-				call input_error(' File not found: '//hs_path(:len)//'phgs.exe')
+				call input_error(' File not found: '//modflow_path(:len)//'usgs_1.exe')
 			endif
-			write(ieco,'(a)') hs_path(:len)//'phgs.exe'
+			write(ieco,'(a)') modflow_path(:len)//'usgs_1.exe'
 
-        elseif(instruction .eq. hsplot_path_cmd) then
-			read(ibat,'(a)',iostat=status) hsplot_path
-			len=len_trim(hsplot_path)
-			inquire(file=hsplot_path(:len)//'hsplot.exe',exist=file_exists)
-			if(.not. file_exists) then
-				call input_error(' File not found: '//hsplot_path(:len)//'hsplot.exe')
-			endif
-			write(ieco,'(a)') hsplot_path(:len)//'hsplot.exe'
+        elseif(instruction .eq. MUTPost_path_cmd) then
+			read(ibat,'(a)',iostat=status) MUTPost_path
+			len=len_trim(MUTPost_path)
+            if(mut_debug) then
+			    inquire(file=MUTPost_path(:len)//'mut_debug.exe',exist=file_exists)
+			    if(.not. file_exists) then
+				    call input_error(' File not found: '//MUTPost_path(:len)//'mut_debug.exe')
+			    endif
+			    write(ieco,'(a)') MUTPost_path(:len)//'mut_debug.exe'
+            else
+			    inquire(file=MUTPost_path(:len)//'mut.exe',exist=file_exists)
+			    if(.not. file_exists) then
+				    call input_error(' File not found: '//MUTPost_path(:len)//'mut.exe')
+			    endif
+			    write(ieco,'(a)') MUTPost_path(:len)//'mut.exe'
+            endif
 
         elseif(instruction .eq. change_dirs) then
 			read(ibat,'(a)',iostat=status) instruction
@@ -163,30 +182,44 @@ program hsbatch_processor
 					case default
 						write(ieco,'(a)') '    Directory successfully changed'
 						if(scanning) then
-						    inquire(file='batch.pfx',exist=batch_exists)
-							if(.not. batch_exists) call input_error('No batch.pfx file')
+						 !   inquire(file='batch.pfx',exist=batch_exists)
+							!if(.not. batch_exists) call input_error('No batch.pfx file')
 						else
-							if(do_grok) then
-								write(ieco,'(a,\)') '    Running Grok...'
-								dummy=secnds(0.0)
-								len=len_trim(grok_path)
-								i=system(grok_path(:len)//'grok.exe')
+							if(do_MUT) then
+                                if(mut_debug) then
+								    write(ieco,'(a,\)') '    Running MUT_debug _build...'
+								    dummy=secnds(0.0)
+								    len=len_trim(MUT_path)
+								    i=system(MUT_path(:len)//'mut_degug.exe  _build')
+                                else
+								    write(ieco,'(a,\)') '    Running MUT _build...'
+								    dummy=secnds(0.0)
+								    len=len_trim(MUT_path)
+								    i=system(MUT_path(:len)//'mut.exe  _build')
+                                endif
 								dummy=secnds(dummy)
 								write(ieco,'(f15.5,a)') dummy,' seconds'
 							end if
-							if(do_hs) then
-								write(ieco,'(a,\)') '    Running HGS...'
+							if(do_Modflow) then
+								write(ieco,'(a,\)') '    Running USGS_1 modflow'
 								dummy=secnds(0.0)
-								len=len_trim(hs_path)
-								i=system(hs_path(:len)//'phgs.exe')
+								len=len_trim(modflow_path)
+								i=system(modflow_path(:len)//'usgs_1.exe modflow')
 								dummy=secnds(dummy)
 								write(ieco,'(f15.5,a)') dummy,' seconds'
 							end if
-							if(do_hsplot) then
-								write(ieco,'(a,\)') '    Running Hsplot...'
-								dummy=secnds(0.0)
-								len=len_trim(hsplot_path)
-								i=system(hsplot_path(:len)//'hsplot.exe')
+							if(do_MUTplot) then
+                                if(mut_debug) then
+								    write(ieco,'(a,\)') '    Running MUT_debug _post...'
+								    dummy=secnds(0.0)
+								    len=len_trim(MUTPost_path)
+								    i=system(MUTPost_path(:len)//'mut_debug.exe _post')
+                                else
+								    write(ieco,'(a,\)') '    Running MUT _post...'
+								    dummy=secnds(0.0)
+								    len=len_trim(MUTPost_path)
+								    i=system(MUTPost_path(:len)//'mut.exe _post')
+                                endif
 								dummy=secnds(dummy)
 								write(ieco,'(f15.5,a)') dummy,' seconds'
 							end if
@@ -233,7 +266,7 @@ program hsbatch_processor
             endif
 
         else
-			call input_error('HSBATCH PROCESSOR: Unrecognized instruction')
+			call input_error('MUTBatch PROCESSOR: Unrecognized instruction')
         endif
 
     end do
@@ -250,12 +283,12 @@ program hsbatch_processor
     endif
 
 	dummy2=secnds(dummy2)
-	write(ieco,'(a,f15.5,a)') 'TOTAL Elapsed time HSBATCH: ',dummy2,' seconds'
+	write(ieco,'(a,f15.5,a)') 'TOTAL Elapsed time MUTBatch: ',dummy2,' seconds'
 
-end program hsbatch_processor
+end program MUTbatch_processor
 !----------------------------------------------------------------------
 subroutine InitRuntimeHistory
-    use hsbat_data
+    use MUTbat_data
     implicit none
     
     character(4096) line
@@ -313,7 +346,7 @@ end subroutine InitRuntimeHistory
 
 !----------------------------------------------------------------------
 subroutine OverwriteRuntimeHistory
-    use hsbat_data
+    use MUTbat_data
     implicit none
     
     character(128) ::rfile 
@@ -339,7 +372,7 @@ subroutine enter_prefix(prefix,lp,nunit,ext)
     logical batch_exists,prepro_input_exists
     character*40 prefix
     character*(*) ext
-    character*10 dext
+    character*11 dext
     !rt-nov99
     character*40 fname
     integer l_ext,nunit,lp
@@ -362,7 +395,7 @@ subroutine enter_prefix(prefix,lp,nunit,ext)
 
         137     close(nunit)
     else
-        WRITE(*,*) 'Give prefix of problem filename...'
+        WRITE(*,*) 'Enter a prefix for a .MUTBatch file: '
         read(*,132) prefix
         132     format(a32)
     endif
@@ -479,7 +512,7 @@ subroutine lcase(string)
 end subroutine lcase
 !----------------------------------------------------------------------
 subroutine input_error(str)
-	use hsbat_data
+	use MUTbat_data
 	implicit none
 	character(*) :: str
 
@@ -503,42 +536,42 @@ subroutine header(iunit)
 	len=len_trim(local_name)
     write(iunit,'(1x,a)') local_name(:len)
     write(iunit,*) '@@                                                                      @@'
-	len=len_trim(local_version)
-    write(iunit,'(1x,2a,T74,a)') '@@   REVISION:   ',local_version(:len),'@@'
-	len=len_trim(build_date)
-    write(iunit,'(1x,2a,T74,a)') '@@   BUILD DATE: ',build_date(:len),'@@'
-	len=len_trim(build_specific_info)
-    write(iunit,'(1x,2a,T74,a)') '@@   BUILD INFO: ',build_specific_info(:len),'@@'
-
-	if(index(local_version,'M') > 0 .or. index(local_version,'S') > 0 .or. index(local_version,':') > 0) then
-		len=len_trim(HGSDir)
-		write(iunit,'(1x,2a,T74,a)') '@@   DIRECTORY:  ',HGSDir(:len),'@@'
-		write(iunit,*) '@@                                                                       @@'
-		write(iunit,*) '@@   REPOSITORY INFORMATION:                                             @@'
-		len=len_trim(repo_1)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_1(:len),'@@'
-		len=len_trim(repo_2)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_2(:len),'@@'
-		len=len_trim(repo_3)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_3(:len),'@@'
-		len=len_trim(repo_4)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_4(:len),'@@'
-		len=len_trim(repo_5)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_5(:len),'@@'
-		len=len_trim(repo_6)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_6(:len),'@@'
-		len=len_trim(repo_7)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_7(:len),'@@'
-		len=len_trim(repo_8)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_8(:len),'@@'
-		len=len_trim(repo_9)
-		write(iunit,'(1x,2a,T74,a)') '@@   ',repo_9(:len),'@@'
-		write(iunit,*) '@@                                                                      @@'
-	endif
-    write(iunit,*) '@@                                                                      @@'
-    write(iunit,*) '@@   (c) Rene Therrien, 1993 - 2006                                     @@'
-    write(iunit,*) '@@       Rob McLaren                                                    @@'
-    write(iunit,*) '@@       E. A. Sudicky                                                  @@'
+	!len=len_trim(local_version)
+ !   write(iunit,'(1x,2a,T74,a)') '@@   REVISION:   ',local_version(:len),'@@'
+	!len=len_trim(build_date)
+ !   write(iunit,'(1x,2a,T74,a)') '@@   BUILD DATE: ',build_date(:len),'@@'
+	!len=len_trim(build_specific_info)
+ !   write(iunit,'(1x,2a,T74,a)') '@@   BUILD INFO: ',build_specific_info(:len),'@@'
+ !
+	!if(index(local_version,'M') > 0 .or. index(local_version,'S') > 0 .or. index(local_version,':') > 0) then
+	!	len=len_trim(HGSDir)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   DIRECTORY:  ',HGSDir(:len),'@@'
+	!	write(iunit,*) '@@                                                                       @@'
+	!	write(iunit,*) '@@   REPOSITORY INFORMATION:                                             @@'
+	!	len=len_trim(repo_1)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_1(:len),'@@'
+	!	len=len_trim(repo_2)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_2(:len),'@@'
+	!	len=len_trim(repo_3)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_3(:len),'@@'
+	!	len=len_trim(repo_4)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_4(:len),'@@'
+	!	len=len_trim(repo_5)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_5(:len),'@@'
+	!	len=len_trim(repo_6)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_6(:len),'@@'
+	!	len=len_trim(repo_7)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_7(:len),'@@'
+	!	len=len_trim(repo_8)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_8(:len),'@@'
+	!	len=len_trim(repo_9)
+	!	write(iunit,'(1x,2a,T74,a)') '@@   ',repo_9(:len),'@@'
+	!	write(iunit,*) '@@                                                                      @@'
+	!endif
+    !write(iunit,*) '@@                                                                      @@'
+    !write(iunit,*) '@@   (c) Rene Therrien, 1993 - 2006                                     @@'
+    !write(iunit,*) '@@       Rob McLaren                                                    @@'
+    !write(iunit,*) '@@       E. A. Sudicky                                                  @@'
     write(iunit,*) '@@                                                                      @@'
     write(iunit,*) '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
 

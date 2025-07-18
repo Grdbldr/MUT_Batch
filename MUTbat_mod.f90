@@ -12,7 +12,7 @@ module machine_constants
 
 end module machine_constants
 !----------------------------------------------------------------------
-module hsbat_data
+module MUTbat_data
     use machine_constants
 
 	! I/O file unit numbers
@@ -30,14 +30,15 @@ module hsbat_data
 	integer :: i, status
 	logical :: list_of_files
 
-	logical :: do_grok=.true.
-	logical :: do_hs=.true.
-	logical :: do_hsplot=.true.
+	logical :: do_MUT=.true.
+	logical :: do_Modflow=.true.
+	logical :: do_MUTplot=.true.
 	logical :: do_runtime_history=.false.
+	logical :: mut_debug=.false.
 
-	character(128) :: grok_path=''
-	character(128) :: hs_path=''
-	character(128) :: hsplot_path=''
+	character(128) :: MUT_path=''
+	character(128) :: modflow_path=''
+	character(128) :: MUTPost_path=''
 
 	logical :: scanning, batch_exists
 	integer :: len
@@ -53,4 +54,4 @@ module hsbat_data
     integer :: nrt, ntimes(nrtmax)
 
 
-end module hsbat_data
+end module MUTbat_data

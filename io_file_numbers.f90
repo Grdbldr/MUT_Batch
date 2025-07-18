@@ -1,5 +1,5 @@
 subroutine initunit
-	use hsbat_data
+	use MUTbat_data
 	implicit none
 
 	file_open_flag(:)=.false.
@@ -11,7 +11,7 @@ subroutine initunit
 end subroutine initunit
 !----------------------------------------------------------------------
 subroutine getunit(iunit)
-	use hsbat_data
+	use MUTbat_data
 	implicit none
 	integer :: iunit
 
@@ -34,7 +34,7 @@ subroutine getunit(iunit)
 end subroutine getunit
 !----------------------------------------------------------------------
 subroutine freeunit(iunit)
-	use hsbat_data
+	use MUTbat_data
 	implicit none
 	integer :: iunit
 
